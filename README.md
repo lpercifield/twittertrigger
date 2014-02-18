@@ -60,7 +60,7 @@ Under the **Settings Tab** make sure that you have permissions for
 
 ## Use
 
-Change `config.json` to use your app's **Consumer Key & Secret**
+Rename `config_copy.json` to `config.json` and change to use your app's **Consumer Key & Secret**
 (which is on the **Details** tab).
 
 Now run the app
