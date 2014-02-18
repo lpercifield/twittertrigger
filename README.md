@@ -1,6 +1,20 @@
 node-twitter-demo
 ===
 
+**NEW FEATURES**:
+This project was created for the [Newtown Creek Alliance Weather in the Watershed project](http://www.newtowncreekalliance.org/weather-in-the-watershed/)
+This project was created as a means to enable tweets from Xively triggers
+This project was abstracted from [How to Tweet from NodeJS](https://github.com/coolaj86/node-twitter-demo)
+
+Features:
+Uses twitter login to manage accounts
+Create tweets that will be triggered from Xively datastreams triggers
+Manage active tweet text and datastreams
+
+
+===
+**Original ReadMe**:
+
 **Tutorial & Screencast**:
 [How to Tweet from NodeJS](http://blog.coolaj86.com/articles/how-to-tweet-from-nodejs/)
 
