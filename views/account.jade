@@ -1,0 +1,97 @@
+extends layout
+
+
+block content
+  div.container
+    h1= title
+    p Welcome to #{title}
+    form(method='post')
+    script(src='deps/jquery.min.js')
+    script(src='deps/underscore.js')
+    script(src='deps/opt/jsv.js')
+    script(src='lib/jsonform.js')
+    script(type='text/javascript').
+      //console.log('login was complete' +!{user})
+      var userStuff = JSON.parse(!{JSON.stringify(user)})
+      //console.log(JSON.stringify(userStuff.triggers))
+      var formObject =
+      {
+        "schema": {
+          "triggers": {
+            "type": "array", 
+            "items": {
+              "type": "object", 
+              "title": "Datastream Trigger", 
+              "properties": {
+                "id": {
+                  "type": "integer", 
+                  "title": "Feed ID", 
+                  "required": true
+                }, 
+                "datastream": {
+                  "type": "string", 
+                  "title": "Datastream"
+                }, 
+                "tweetstring": {
+                  "type": "string", 
+                  "title": "Tweet Text"
+                }, 
+                "_id": {
+                  "type": "string", 
+                  "title": "obj _id"
+                }
+              }
+            }
+          }
+        }, 
+        "form": [
+          {
+            "type": "tabarray", 
+            "items": {
+              "type": "section", 
+              "legend": "{{idx}}. {{value}}", 
+              "items": [
+                "triggers[].id", 
+                "triggers[].datastream", 
+                {
+                  "key": "triggers[].tweetstring", 
+                  "type": "textarea"
+                },
+                {
+                  "key": "triggers[]._id",
+                  "type":"hidden"
+                }
+                
+              ]
+            }
+          }, 
+          {
+            "type": "submit", 
+            "title": "OK - Make it so"
+          }
+        ],
+        "onSubmit": function (errors, values) {
+          if (errors) {
+            alert('Check the form for invalid values!');
+            return;
+          }
+          // "values" follows the schema, yeepee!
+          event.preventDefault();
+          var myJsonString = JSON.stringify(values);
+          console.log(myJsonString);
+          //return myJsonString;
+          $.post("/account",values);
+          }
+      }
+        var testVal = {"triggers": [
+          { "id": "234", "datastream": "male", "age": 34 },
+          { "id": "352352", "datastream": "female", "age": 6 },
+          { "id": "3523423", "datastream": "alien" }
+        ]}
+        var triggers = new Array()
+        triggers.triggers = $.parseJSON(JSON.stringify(userStuff.triggers))
+        //triggers.triggers = JSON.stringify(userStuff.triggers)
+        console.log(triggers)
+        console.log(testVal)
+        formObject.value = triggers
+        $('form').jsonForm(formObject)
