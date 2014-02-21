@@ -12,8 +12,9 @@ var express = require('express')
   , path = require('path')
   , app = express()
   // server info
-  , domain = "leifp-triggertweet.jit.su"
-  , port = process.env.PORT || 80
+  //, domain = "leifp-triggertweet.jit.su"
+  , domain = "localhost"
+  , port = process.env.PORT || 8080
   // passport / twitter stuff
   , config = require('./config')
   , passport = require('passport')
@@ -23,6 +24,8 @@ var express = require('express')
   , user = {}
   // oauth / twitter stuff
   , OAuth= require('oauth').OAuth
+  , time = require('time')
+  , dateFormat = require('dateformat')
   , oa
   ;
 var MongoClient = require('mongodb').MongoClient
@@ -31,6 +34,7 @@ var MongoClient = require('mongodb').MongoClient
 var BSON = require('mongodb').BSONPure;
 var users;
 var triggers;
+var timezone = "America/New_York";
 function initTwitterOauth() {
   oa = new OAuth(
     "https://twitter.com/oauth/request_token"
@@ -137,6 +141,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // development only
 if ('development' === app.get('env')) {
   app.use(express.errorHandler());
+  
 }
 
 app.get('/', routes.index);
@@ -228,7 +233,8 @@ app.post('/account', ensureAuthenticated, function(req,res){
                 if(err) throw err;
                 console.log("UPDATED USER")
                 user = newUser;
-                res.redirect('/account');
+                //res.redirect('/account');
+                res.send(200);
                 //done(null, user);
             });
 });
@@ -272,7 +278,9 @@ function searchForTrigger(obj){
 				if(o.triggers[i].datastream == tds){
 					//console.log("GOT IT " + JSON.stringify(o));
 					console.log(o.triggers[i].tweetstring);
-					makeTweet(o.token, o.tokenSecret, o.triggers[i].tweetstring, function (error, data) {
+					var now = new time.Date();
+					now.setTimezone(timezone);
+					makeTweet(o.token, o.tokenSecret, o.triggers[i].tweetstring + " Updated: " + now, function (error, data) {
 		        if(error) {
 		          console.log(require('sys').inspect(error));
 		          //res.end('bad stuff happened');

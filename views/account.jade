@@ -35,7 +35,23 @@ block content
                 "tweetstring": {
                   "type": "string", 
                   "title": "Tweet Text"
-                }, 
+                },
+                "24tweet": {
+                  "type": "string", 
+                  "title": "24 Hours Tweet"
+                },
+                "48tweet": {
+                  "type": "string", 
+                  "title": "48 Hours Tweet"
+                },
+                "72tweet": {
+                  "type": "string", 
+                  "title": "72 Hours Tweet"
+                },
+                "stillovertweet": {
+                  "type": "string", 
+                  "title": "Still CSO Overflow Tweet"
+                },
                 "_id": {
                   "type": "string", 
                   "title": "obj _id"
@@ -55,6 +71,22 @@ block content
                 "triggers[].datastream", 
                 {
                   "key": "triggers[].tweetstring", 
+                  "type": "textarea"
+                },
+                {
+                  "key": "triggers[].24tweet", 
+                  "type": "textarea"
+                },
+                {
+                  "key": "triggers[].48tweet", 
+                  "type": "textarea"
+                },
+                {
+                  "key": "triggers[].72tweet", 
+                  "type": "textarea"
+                },
+                {
+                  "key": "triggers[].stillovertweet", 
                   "type": "textarea"
                 },
                 {
@@ -80,7 +112,12 @@ block content
           var myJsonString = JSON.stringify(values);
           console.log(myJsonString);
           //return myJsonString;
-          $.post("/account",values);
+          $.post("/account",values, function(){
+            alert("SUCCESS")
+          
+          }).fail(function() {
+            alert( "error" );
+          });
           }
       }
         var testVal = {"triggers": [
