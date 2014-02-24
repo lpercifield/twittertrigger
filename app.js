@@ -24,8 +24,9 @@ var express = require('express')
   , user = {}
   // oauth / twitter stuff
   , OAuth= require('oauth').OAuth
-  , time = require('time')
-  , dateFormat = require('dateformat')
+  , moment = require('moment-timezone')
+  , timebot = require('timebot')
+  , NanoTimer = require('nanotimer')
   , oa
   ;
 var MongoClient = require('mongodb').MongoClient
@@ -143,6 +144,18 @@ if ('development' === app.get('env')) {
   app.use(express.errorHandler());
   
 }
+/*
+var then = moment().tz("America/New_York").format('lll');
+console.log("NOW: "+ then);
+setInterval(function(){
+	var newnow = moment().tz("America/New_York").format('lll');
+	
+	var now = moment(newnow);
+	console.log(newnow);
+	var secondsDiff = now.diff(then, 'seconds')
+	console.log(secondsDiff);
+}, 1000);
+*/
 
 app.get('/', routes.index);
 
@@ -260,6 +273,70 @@ function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
   res.redirect('/twitter/authn')
 }
+//This function is executed on the timer intervals
+function tweetInterval(timer, id, dataStream){
+	switch(timer.intervalCount){
+		case 0:
+			break;
+		case 1:
+			timerTweet(id,1,dataStream);
+			break;
+		case 2:
+			timerTweet(id,2,dataStream);
+			break;
+		case 3:
+			timerTweet(id,3,dataStream);
+			timer.clearInterval();
+			break;
+		default:
+	}
+	
+}
+
+function timerTweet(id,time,dataStream){
+	users.findOne({_id:id}, function(err,o){
+		if(err !=null ){
+      console.log("ERROR");
+      console.log(err);
+    }else{
+    //console.log("FOUND OBJECT: "+JSON.stringify(o));
+    console.log("DATASTREAM " + dataStream);
+    console.log("TRIGGERS: " + o.triggers.toString());
+    var tweetString;
+    switch(time){
+    	case 1:
+    		tweetString = o.triggers[dataStream].twofourtweet;
+    		break;
+    	case 2:
+    		tweetString = o.triggers[dataStream].foureighttweet;
+    		break;
+    	case 3:
+    		tweetString = o.triggers[dataStream].seventwotweet;
+    		break;
+    }
+    	var newnow = moment().tz("America/New_York").format('lll');
+			makeTweet(o.token, o.tokenSecret, tweetString + " Updated: " + newnow, function (error, data) {
+        if(error) {
+          console.log(require('sys').inspect(error));
+          //res.end('bad stuff happened');
+        } else {
+          console.log(data);
+/*
+          o.lastTweetTime = newnow;
+          users.save(o, function(err,newUser){
+            if(err) throw err;
+            console.log("Tweet Time Saved")
+            //done(null, user);
+					});
+*/
+          //res.end('go check your tweets!');
+        }
+			});
+    }
+	})
+}
+
+//This function takes the post data from the trigger and looks to see if there is a matching twitter alert in the database
 function searchForTrigger(obj){
   var tid = obj.environment.id.toString();
   var tds = obj.triggering_datastream.id.toString();
@@ -277,18 +354,60 @@ function searchForTrigger(obj){
 			//Envodionment ID: 44129 DataStream ID: 9 findOne({'triggers.id':44129, 'triggers.datastream':9})
 				if(o.triggers[i].datastream == tds){
 					//console.log("GOT IT " + JSON.stringify(o));
-					console.log(o.triggers[i].tweetstring);
-					var now = new time.Date();
-					now.setTimezone(timezone);
-					makeTweet(o.token, o.tokenSecret, o.triggers[i].tweetstring + " Updated: " + now, function (error, data) {
-		        if(error) {
-		          console.log(require('sys').inspect(error));
-		          //res.end('bad stuff happened');
-		        } else {
-		          console.log(data);
-		          //res.end('go check your tweets!');
-		        }
-					});
+					//console.log(o.triggers[i].tweetstring);
+					console.log("TIMER " + global[o._id.toString()]);
+					var newnow = moment().tz("America/New_York").format('lll');
+					var now = moment(newnow);
+					var timeSinceLastTweet = now.diff(o.lastTweetTime,"seconds");
+					var dataStreamNum = i;
+					console.log("TIME SINCE LAST TWEET" + timeSinceLastTweet);
+					if(timeSinceLastTweet<43200){ // CHANGE THIS BACK TO 43200 - 12 hours
+						console.log("NOT LONG ENOUGH!!");
+						if(global[o._id.toString()] != null){
+							global[o._id.toString()].clearInterval();
+						}
+						makeTweet(o.token, o.tokenSecret, o.triggers[i].stillovertweet + " Updated: " + newnow, function (error, data) {
+			        if(error) {
+			          console.log(require('sys').inspect(error));
+			          //res.end('bad stuff happened');
+			        } else {
+			          console.log(data);
+			          o.lastTweetTime = newnow;
+			          users.save(o, function(err,newUser){
+	                if(err) throw err;
+	                console.log("Tweet Time Saved")
+	                //done(null, user);
+								});
+								var timerObject = o._id.toString();
+								global[timerObject] = new NanoTimer();
+								global[timerObject].setInterval(tweetInterval, [global[timerObject],o._id,dataStreamNum], '86400s');
+								//create timers for this tweet object 24hrs 28hrs 72hrs
+			          //res.end('go check your tweets!');
+			        }
+						});
+
+					}else{
+					
+						makeTweet(o.token, o.tokenSecret, o.triggers[i].tweetstring + " Updated: " + newnow, function (error, data) {
+			        if(error) {
+			          console.log(require('sys').inspect(error));
+			          //res.end('bad stuff happened');
+			        } else {
+			          console.log(data);
+			          o.lastTweetTime = newnow;
+			          users.save(o, function(err,newUser){
+	                if(err) throw err;
+	                console.log("Tweet Time Saved")
+	                //done(null, user);
+								});
+								var timerObject = o._id.toString();
+								global[timerObject] = new NanoTimer();
+								global[timerObject].setInterval(tweetInterval, [global[timerObject],o._id,dataStreamNum], '86400s');// 86400s = 24 hours
+								//create timers for this tweet object 24hrs 28hrs 72hrs
+			          //res.end('go check your tweets!');
+			        }
+						});
+					}
 				}
 			}
     }
