@@ -12,8 +12,8 @@ var express = require('express')
   , path = require('path')
   , app = express()
   // server info
-  //, domain = "leifp-triggertweet.jit.su"
-  , domain = "localhost"
+  , domain = "dontflushme.cloudapp.net"
+  //, domain = "localhost"
   , port = process.env.PORT || 8080
   // passport / twitter stuff
   , config = require('./config')
@@ -31,7 +31,7 @@ var express = require('express')
   ;
 var MongoClient = require('mongodb').MongoClient
   , format = require('util').format
-  ; 
+  ;
 var BSON = require('mongodb').BSONPure;
 var users;
 var triggers;
@@ -142,14 +142,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // development only
 if ('development' === app.get('env')) {
   app.use(express.errorHandler());
-  
+
 }
 /*
 var then = moment().tz("America/New_York").format('lll');
 console.log("NOW: "+ then);
 setInterval(function(){
 	var newnow = moment().tz("America/New_York").format('lll');
-	
+
 	var now = moment(newnow);
 	console.log(newnow);
 	var secondsDiff = now.diff(then, 'seconds')
@@ -214,7 +214,7 @@ app.post('/trigger', function(req,res){
         //alert(e); //error in the above string(in this case,yes)!
         console.log(e);
         res.end(e.toString());
-        
+
     }
   }
 });
@@ -224,7 +224,7 @@ app.post('/account', ensureAuthenticated, function(req,res){
   //console.log(req.user);
   var savetrigger = {}
   savetrigger = req.body.triggers;
-  
+
   console.log(savetrigger);
   //savetrigger.userid = req.user._id;
   savetrigger.forEach(function(item){
@@ -290,7 +290,7 @@ function tweetInterval(timer, id, dataStream){
 			break;
 		default:
 	}
-	
+
 }
 
 function timerTweet(id,time,dataStream){
@@ -361,11 +361,12 @@ function searchForTrigger(obj){
 					var timeSinceLastTweet = now.diff(o.lastTweetTime,"seconds");
 					var dataStreamNum = i;
 					console.log("TIME SINCE LAST TWEET" + timeSinceLastTweet);
+					if(global[o._id.toString()] != null){
+						global[o._id.toString()].clearInterval();
+					}
 					if(timeSinceLastTweet<43200){ // CHANGE THIS BACK TO 43200 - 12 hours
 						console.log("NOT LONG ENOUGH!!");
-						if(global[o._id.toString()] != null){
-							global[o._id.toString()].clearInterval();
-						}
+
 						makeTweet(o.token, o.tokenSecret, o.triggers[i].stillovertweet + " Updated: " + newnow, function (error, data) {
 			        if(error) {
 			          console.log(require('sys').inspect(error));
@@ -387,7 +388,7 @@ function searchForTrigger(obj){
 						});
 
 					}else{
-					
+
 						makeTweet(o.token, o.tokenSecret, o.triggers[i].tweetstring + " Updated: " + newnow, function (error, data) {
 			        if(error) {
 			          console.log(require('sys').inspect(error));
