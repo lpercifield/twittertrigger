@@ -83,7 +83,7 @@ users.findOne({'_id':o_id}, function(err, user) {
 twitterAuthn = new TwitterStrategy({
     consumerKey: config.consumerKey
   , consumerSecret: config.consumerSecret
-  , callbackURL: "http://" + domain + ":" + port + "/twitter/authn/callback"
+  , callbackURL: "http://" + domain + "/twitter/authn/callback"
   },
   function(token, tokenSecret, profile, done) {
   users.findOne({tId : profile.id}, function(err, oldUser){
